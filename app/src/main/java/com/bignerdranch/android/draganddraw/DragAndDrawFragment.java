@@ -12,6 +12,7 @@ public class DragAndDrawFragment extends Fragment {
         return new DragAndDrawFragment();
     }
 
+    /*Inflate the custom view: fragment_drag_and_draw*/
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_drag_and_draw, container, false);
