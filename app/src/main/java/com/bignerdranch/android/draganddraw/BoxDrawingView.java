@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -15,6 +17,8 @@ import java.util.List;
 public class BoxDrawingView extends View {
 
     private static final String TAG = "BoxDrawingView";
+
+    private static final String PARENT_STATE_KEY = "ParentState";
 
     //Reference to current box being acted upon
     private Box mCurrentBox;
@@ -41,6 +45,65 @@ public class BoxDrawingView extends View {
         //Off-white background
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setColor(0xfff8efe0);
+    }
+
+    /*Loop through currently displayed boxes
+    * Store its attributes in the above Bundle*/
+    protected Parcelable onSaveInstanceState() {
+        Parcelable parentState = super.onSaveInstanceState();
+
+        //Bundle used to save state
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(PARENT_STATE_KEY, parentState);
+
+        int boxNumber = 1;
+
+        //Save attributes of the currently drawn boxes
+        for (Box box : mBoxen) {
+            //Float array of box attributes
+            float[] pointsArray = {
+                    box.getOrigin().x,
+                    box.getOrigin().y,
+                    box.getCurrent().x,
+                    box.getCurrent().y
+            };
+
+            //Place array into bundle;
+            bundle.putFloatArray("box" + boxNumber, pointsArray);
+            boxNumber++;
+        }
+
+        return bundle;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        //If bundle is valid
+        if (state instanceof Bundle) {
+            Bundle bundle = (Bundle) state;
+            super.onRestoreInstanceState(bundle.getParcelable(PARENT_STATE_KEY));
+
+            //Prefix of individual box names
+            String prefixName = "box";
+            int boxCount = 1;
+
+            //Search bundle keys for previously drawn boxes
+            while (bundle.containsKey(prefixName + boxCount)) {
+                float[] pointsArray = bundle.getFloatArray(prefixName + boxCount);
+
+                //Create PointF objects from values inside Bundle
+                PointF origin = new PointF(pointsArray[0], pointsArray[1]);
+                PointF current = new PointF(pointsArray[2], pointsArray[3]);
+
+                Box box = new Box(origin);
+                box.setCurrent(current);
+
+                mBoxen.add(box);
+                boxCount++;
+            }
+        } else {
+            super.onRestoreInstanceState(state);
+        }
     }
 
     /*Handle various types of touch inputs from the user*/
